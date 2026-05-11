@@ -2,7 +2,7 @@ name: Fetch TSML feeds
 
 on:
   schedule:
-    - cron: '17 4 * * *'   # once daily at 04:17 UTC (~midnight Eastern)
+    - cron: '0 7 * * *'    # once daily at 07:00 UTC (= 3 AM EDT / 2 AM EST). Runs before TSML's 4 AM Eastern import.
   workflow_dispatch:        # allow manual run from Actions tab
 
 permissions:
