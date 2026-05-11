@@ -22,7 +22,7 @@ Add an entry to the matrix in `fetch-feeds.yml`:
 Then in OAI's TSML data source, use:
 
 ```
-https://raw.githubusercontent.com/<owner>/oai-feed-relays/main/my-source.json
+https://raw.githubusercontent.com/jr0cket/oai-feed-relays/main/my-source.json
 ```
 
 ## Current relays
