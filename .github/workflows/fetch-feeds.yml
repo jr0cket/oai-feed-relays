@@ -20,21 +20,53 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Fetch ${{ matrix.name }}
+      - name: Fetch and validate ${{ matrix.name }}
+        id: fetch
+        # Failures here mark the step "soft-failed" via outputs.skip=1,
+        # so the workflow stays green and the previous good file is preserved.
+        continue-on-error: true
         run: |
-          set -euo pipefail
-          curl -sf --max-time 60 -o "${{ matrix.name }}.json.new" "${{ matrix.url }}"
-          python3 -c "
+          set +e
+
+          # Retry up to 3 times with 15s backoff
+          attempt=0
+          while [ $attempt -lt 3 ]; do
+            attempt=$((attempt + 1))
+            echo "Fetch attempt $attempt..."
+            curl -sf --max-time 60 -o "${{ matrix.name }}.json.new" "${{ matrix.url }}" && break
+            sleep 15
+          done
+
+          if [ ! -s "${{ matrix.name }}.json.new" ]; then
+            echo "::warning::Upstream fetch failed after 3 attempts; keeping previous ${{ matrix.name }}.json"
+            echo "skip=1" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Validate
+          python3 - <<PY
           import json, sys
-          d = json.load(open('${{ matrix.name }}.json.new'))
-          assert isinstance(d, list), f'Expected list, got {type(d).__name__}'
-          assert len(d) > 0, 'Empty meeting list'
-          assert all('slug' in m for m in d), 'Missing slug field'
+          try:
+              d = json.load(open('${{ matrix.name }}.json.new'))
+          except Exception as e:
+              print(f'::warning::Upstream returned non-JSON: {e}')
+              sys.exit(2)
+          if not isinstance(d, list) or len(d) == 0 or not all('slug' in m for m in d):
+              print('::warning::Upstream returned invalid structure (expected non-empty list of meetings with slugs)')
+              sys.exit(2)
           print(f'OK: {len(d)} meetings')
-          "
+          PY
+          rc=$?
+          if [ $rc -ne 0 ]; then
+            echo "skip=1" >> "$GITHUB_OUTPUT"
+            rm -f "${{ matrix.name }}.json.new"
+            exit 0
+          fi
+
           mv "${{ matrix.name }}.json.new" "${{ matrix.name }}.json"
 
       - name: Commit if changed
+        if: steps.fetch.outputs.skip != '1'
         run: |
           if [[ -n "$(git status --porcelain ${{ matrix.name }}.json)" ]]; then
             git config user.name 'github-actions[bot]'
