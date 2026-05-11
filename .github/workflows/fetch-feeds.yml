@@ -1,0 +1,48 @@
+name: Fetch TSML feeds
+
+on:
+  schedule:
+    - cron: '17 */6 * * *'  # every 6 hours at :17 past
+  workflow_dispatch:        # allow manual run from Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: lanark-leeds
+            url: https://lanarkleedsaa.org/wp-admin/admin-ajax.php?action=meetings
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch ${{ matrix.name }}
+        run: |
+          set -euo pipefail
+          curl -sf --max-time 60 -o "${{ matrix.name }}.json.new" "${{ matrix.url }}"
+          python3 -c "
+          import json, sys
+          d = json.load(open('${{ matrix.name }}.json.new'))
+          assert isinstance(d, list), f'Expected list, got {type(d).__name__}'
+          assert len(d) > 0, 'Empty meeting list'
+          assert all('slug' in m for m in d), 'Missing slug field'
+          print(f'OK: {len(d)} meetings')
+          "
+          mv "${{ matrix.name }}.json.new" "${{ matrix.name }}.json"
+
+      - name: Commit if changed
+        run: |
+          if [[ -n "$(git status --porcelain ${{ matrix.name }}.json)" ]]; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add "${{ matrix.name }}.json"
+            git commit -m "Refresh ${{ matrix.name }} feed"
+            git push
+            echo "Updated ${{ matrix.name }}.json"
+          else
+            echo "No changes to ${{ matrix.name }}.json"
+          fi
