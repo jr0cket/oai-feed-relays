@@ -1,0 +1,78 @@
+name: Check AA district meeting pages
+
+on:
+  schedule:
+    - cron: '0 10 1,15 * *'   # 1st and 15th of each month at 10:00 UTC (6 AM ET)
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run — check but do not update snapshots or open issue'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write   # push snapshot commits
+  issues: write     # open change-notification issues
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pdftotext
+        run: sudo apt-get install -y poppler-utils
+
+      - name: Run snapshot check
+        id: check
+        continue-on-error: true
+        env:
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
+        run: |
+          FLAGS=""
+          [ "$DRY_RUN" = "true" ] && FLAGS="--dry-run"
+          python3 scripts/check_meetings.py $FLAGS
+
+      - name: Commit updated snapshots
+        if: steps.check.outputs.has_changes == 'true' && inputs.dry_run != true
+        run: |
+          git config user.name  'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add snapshots/
+          # report.txt is transient — don't commit it
+          if git diff --cached --quiet; then
+            echo "Nothing staged (dry-run guard hit?)"
+          else
+            git commit -m "biweekly snapshot $(date +%Y-%m-%d): ${{ steps.check.outputs.changed_keys }}"
+            git push
+          fi
+
+      - name: Open issue for meeting changes
+        if: steps.check.outputs.has_changes == 'true' && inputs.dry_run != true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REPORT=$(cat report.txt 2>/dev/null || echo "(no report file)")
+          # Create label if it doesn't exist yet
+          gh label create "meeting-change" \
+            --color "0075ca" \
+            --description "AA meeting data changed — needs TSML sync" \
+            2>/dev/null || true
+          gh issue create \
+            --title "Meeting changes detected — $(date +%Y-%m-%d)" \
+            --label "meeting-change" \
+            --body "## AA District Meeting Changes
+
+The biweekly snapshot check found changes that need to be synced into the OAI WordPress TSML plugin.
+
+\`\`\`
+${REPORT}
+\`\`\`
+
+**Action:** update the affected meetings in the [OAI TSML plugin](https://ottawaaa.org/wp-admin/), then close this issue."
+
+      - name: Warn on fetch errors
+        if: steps.check.outputs.has_errors == 'true'
+        run: |
+          echo "::warning::One or more districts had fetch errors — see job summary for details."
