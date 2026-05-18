@@ -2,13 +2,21 @@
 # Source URL: https://aarenfrew.org/meetings-2/
 # Captured: 2026-05-18
 # Method: Search engine snippet extraction (direct fetch returned HTTP 403 from cloud IP)
-# Note: Day-of-week confirmed only for Wednesday (Steps & Traditions) and Sunday (Kinburn).
+# Page last-modified per search index: 2026-01-03
+# Note: Day-of-week confirmed only for Wednesday (Steps & Traditions), Sunday (Kinburn),
+#       and Monday (Gold Bond — day confirmed via OAI/TSML mirror of this page).
 #       All other meetings have time/location confirmed but DAY IS UNKNOWN from available
 #       index snippets. Day-of-week must be verified on next successful direct fetch.
+#       TIME DISCREPANCY: Gold Bond Group — aarenfrew.org snippet shows 7:30 PM;
+#       OAI TSML record shows 8:00 PM. Webmaster should verify against live page.
 # Meeting format codes: CD=Closed Discussion OS=Open Speaker OD=Open Discussion SG=Study Group W=Wheelchair
 
 SUNDAY
   Kinburn Big Book Group — 1st Sunday of month, 7:30 PM — [SG] — Kinburn Community Center, 3045 Kinburn Side Rd, Kinburn
+
+MONDAY
+  Gold Bond Group — 7:30 PM — [OS] — Catholic church, 78 Wellington St, Eganville ON
+    (Note: OAI TSML record shows 8:00 PM — time needs live verification)
 
 WEDNESDAY (confirmed)
   Steps & Traditions Group — 7:00 PM — [CD,W] — St. John Chrysostom Church, 295 Albert Street, Arnprior
