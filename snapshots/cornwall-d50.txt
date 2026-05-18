@@ -1,0 +1,37 @@
+# SNAPSHOT: Cornwall AA — District 50
+# Source URL: https://www.cornwallaa.ca/meetings
+# Captured: 2026-05-18
+# Method: Search engine snippet extraction (direct fetch returned HTTP 403 from cloud IP)
+# Note: Data sourced from Google-indexed page content. Day-of-week and formats
+#       confirmed from indexed snippets. Completeness: high confidence for Mon–Sat;
+#       Sunday location not confirmed.
+# Meeting format codes: E=English O=Open C=Closed D=Discussion S=Speaker W=Wheelchair H=Hybrid
+
+SUNDAY
+  St. Andrews 12 & 12 Group — 9:00 AM — location not confirmed in index
+
+MONDAY
+  The Nooners Group — 12:00 PM — [C,D,W] — Wesleyan Church, 780 Sydney Street, Cornwall ON
+  Long Sault Meeting — 7:00 PM — [C,D] — Christ Church Seaway, 3 Milles Roche Road, Long Sault ON
+  Williamstown Group — 7:30 PM — [O,D,W] — SDG Library, 19641 County Road 19, Williamstown ON
+  Vankleek Hill 12 Steps — 7:30 PM — [C,D] — Trinity United Church, 14 Mill Street, Vankleek Hill ON
+  5th Tradition Group — 8:00 PM — [O,D] Big Book Study — Knights of Columbus 2nd Floor, 205 Amelia Street, Cornwall ON [Hybrid Zoom ID: 698 936 3585 / PW: 60263]
+
+TUESDAY
+  Safe Haven Group — 7:00–8:00 PM — Knox-St Paul's Church, 800 12th St East, Cornwall ON
+
+WEDNESDAY
+  Sunshine Group — 7:00 PM — Trinity Church, 105 Second Street West, Cornwall ON
+  Sunrays — 7:30 PM — St. Paul's Presbyterian Church, 166 John Street, Hawkesbury ON
+  5th Tradition Group — 8:00 PM — Knights of Columbus 2nd Floor, 205 Amelia Street, Cornwall ON
+
+THURSDAY
+  Hilltop Slippers — 7:00 PM — Knox Church, 29 High Street (Rear Kitchen Entrance), Vankleek Hill ON
+  Seaway International — 8:00 PM — Trinity Church, 105 Second Street West, Cornwall ON
+
+FRIDAY
+  The Nooners 12 — 1:00 PM — Wesleyan Church, 780 Sydney Street, Cornwall ON
+
+SATURDAY
+  Beginners Meeting — 10:30–11:30 AM — Trinity Church, 105 Second St W (back entrance off Trinity St W), Cornwall ON
+  Serenity Group — 7:00–8:00 PM — Wesleyan Church, 780 Sydney St (8th Street entrance), Cornwall ON

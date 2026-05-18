@@ -1,0 +1,27 @@
+# SNAPSHOT: Madawaska Valley AA — District 78
+# Source URL: http://aamadawaskavalley.org/meetings/
+# Source PDF: AA Local Meeting List – March 2025 Update
+# Captured: 2026-05-18
+# Method: Search engine snippet extraction (direct fetch returned HTTP 403 from cloud IP;
+#          PDF direct URL also returned 403). PDF filename confirmed from indexed page content.
+# Note: Meeting data confirmed from multiple indexed snippet sources. Paudash Serenity
+#       Group location/address not confirmed (town of Paudash only).
+# Areas covered: Bancroft, Barry's Bay, Killaloe, Maynooth, Paudash, Whitney
+# Meeting format codes: OD=Open Discussion CD=Closed Discussion OS=Open Speaker
+
+MONDAY
+  Bancroft New Hope Group — 8:00 PM — [OD] — Our Lady of Mercy Catholic Church, 196 Bridge Street West, Bancroft ON K0L 1C0
+
+TUESDAY
+  Paudash Serenity Group — 7:00 PM — [CD] 12-Step Study (Little Red Book); 1st Tuesday of month = Speaker meeting (step of month) — location: Paudash area (street address not confirmed in index)
+
+WEDNESDAY
+  Killaloe Primary Purpose Group — 7:00 PM — [OD] — Seniors Friendship Club, 12 Lake Street, Killaloe ON
+  Whitney East Gate Group — 8:00 PM — [OD] — Senior's Centre, 9 Third Avenue, Whitney ON
+
+THURSDAY
+  Maynooth Group — 8:00 PM — [CD] — United Church, Hwy 62 & Church Street, Maynooth ON
+
+FRIDAY
+  Barry's Bay Group — 7:30 PM — [OD] — 19491 Opeongo Line, Barry's Bay ON
+    Note: Last Friday of each month = 12 & 12 meeting format
