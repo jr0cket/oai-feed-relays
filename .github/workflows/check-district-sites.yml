@@ -1,0 +1,110 @@
+name: Check AA District Sites
+
+# Monitors cornwall (D50), renfrew (D70), and madawaska (no TSML feed).
+# Fetches each site, diffs against snapshots/, commits changes, and
+# optionally notifies OAI WordPress when a substantive change is found.
+
+on:
+  schedule:
+    - cron: '30 8 * * *'   # 08:30 UTC = 4:30 AM EDT / 3:30 AM EST
+  workflow_dispatch:        # allow manual trigger from Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pdftotext
+        run: sudo apt-get install -y poppler-utils
+
+      - name: Configure git
+        run: |
+          git config user.name  'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+      - name: Run site checks
+        id: check
+        run: bash scripts/check-sites.sh
+
+      - name: Commit snapshots and reports
+        run: |
+          git add snapshots/ reports/
+          if git diff --staged --quiet; then
+            echo "Nothing to commit."
+          else
+            if [[ "${{ steps.check.outputs.has_changes }}" == "true" ]]; then
+              msg="Site check $(date -u +%Y-%m-%d): ${{ steps.check.outputs.changed_slugs }}"
+            else
+              msg="Initial snapshots: ${{ steps.check.outputs.first_run_slugs }}"
+            fi
+            git commit -m "$msg"
+            git push -u origin main
+          fi
+
+      # -----------------------------------------------------------------------
+      # Optional: create a private WordPress post on OAI when changes detected.
+      # Requires secrets: WP_USERNAME, WP_APP_PASSWORD
+      # The post lands as a private draft in the WP dashboard for the webmaster.
+      # -----------------------------------------------------------------------
+      - name: Notify OAI WordPress
+        if: steps.check.outputs.has_changes == 'true'
+        env:
+          WP_USERNAME:    ${{ secrets.WP_USERNAME }}
+          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
+        run: |
+          TODAY="$(date -u +%Y-%m-%d)"
+          SLUGS="${{ steps.check.outputs.changed_slugs }}"
+
+          # Build a plain-text body from each changed report
+          BODY=""
+          for slug in $(echo "$SLUGS" | tr ',' ' '); do
+            report="reports/$TODAY-$slug.md"
+            if [[ -f "$report" ]]; then
+              BODY+="$(cat "$report")\n\n---\n\n"
+            fi
+          done
+
+          python3 - <<PY
+          import os, json, urllib.request, urllib.error, base64
+
+          username = os.environ["WP_USERNAME"]
+          password = os.environ["WP_APP_PASSWORD"].replace(" ", "")
+          token    = base64.b64encode(f"{username}:{password}".encode()).decode()
+
+          slugs = os.environ.get("SLUGS", "")
+          today = os.environ.get("TODAY", "")
+
+          payload = json.dumps({
+              "title":   f"District site changes detected: {slugs} — {today}",
+              "content": os.environ.get("BODY", "See reports/ in oai-feed-relays repo."),
+              "status":  "private",
+          }).encode()
+
+          req = urllib.request.Request(
+              "https://ottawaaa.org/wp-json/wp/v2/posts",
+              data    = payload,
+              headers = {
+                  "Authorization": f"Basic {token}",
+                  "Content-Type":  "application/json",
+              },
+              method = "POST",
+          )
+          try:
+              with urllib.request.urlopen(req, timeout=30) as r:
+                  post = json.loads(r.read())
+                  print(f"WP post created: {post.get('link', '(no link)')}")
+          except urllib.error.HTTPError as e:
+              body = e.read().decode()
+              print(f"WP post failed ({e.code}): {body}")
+              # Non-fatal: don't fail the workflow over a notification
+          PY
+        env:
+          WP_USERNAME:    ${{ secrets.WP_USERNAME }}
+          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
+          SLUGS:           ${{ steps.check.outputs.changed_slugs }}
+          TODAY:           ${{ env.TODAY }}
