@@ -2,6 +2,8 @@
 # Source URL: https://www.cornwallaa.ca/meetings
 # Captured: 2026-05-19
 # Source: Printed District 50 meeting list (verified by webmaster 2026-05-19)
+# Note: All four 5th Tradition Group instances use name "5th Tradition Group" —
+#       OAI had Monday/Friday listed as "5th Tradition of Cornwall Meeting" (corrected)
 # Meeting format codes: E=English F=French O=Open C=Closed D=Discussion S=Speaker W=Wheelchair
 
 SUNDAY
