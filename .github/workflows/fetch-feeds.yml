@@ -2,11 +2,15 @@ name: Fetch TSML feeds
 
 on:
   schedule:
-    - cron: '0 7 * * *'    # once daily at 07:00 UTC (= 3 AM EDT / 2 AM EST). Runs before TSML's 4 AM Eastern import.
+    - cron: '17 */2 * * *'  # every 2 hours (Jason 2026-10-13: a change on the 6th reached us on the 13th; "should of known by latest next day")
   workflow_dispatch:        # allow manual run from Actions tab
 
 permissions:
   contents: write
+
+concurrency:
+  group: fetch-feeds
+  cancel-in-progress: false
 
 jobs:
   fetch:
@@ -22,32 +26,22 @@ jobs:
 
       - name: Fetch and validate ${{ matrix.name }}
         id: fetch
-        # Failures here mark the step "soft-failed" via outputs.skip=1,
-        # so the workflow stays green and the previous good file is preserved.
+        # A failed fetch never fails the job: the previous good file is kept, and
+        # status/<name>.json records the failure so ottawaaa.org can raise the alarm
+        # once the copy is more than 24 hours old.
         continue-on-error: true
         run: |
           set +e
-
-          # Retry up to 3 times with 15s backoff
-          attempt=0
-          while [ $attempt -lt 3 ]; do
-            attempt=$((attempt + 1))
-            echo "Fetch attempt $attempt..."
-            curl -sf --max-time 60 -o "${{ matrix.name }}.json.new" "${{ matrix.url }}" && break
-            sleep 15
-          done
-
-          if [ ! -s "${{ matrix.name }}.json.new" ]; then
-            echo "::warning::Upstream fetch failed after 3 attempts; keeping previous ${{ matrix.name }}.json"
-            echo "skip=1" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          # Validate
-          python3 - <<PY
+          UA='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36'
+          ok=0
+          for wait in 0 20 60 120; do
+            sleep $wait
+            echo "Fetch attempt (after ${wait}s)..."
+            curl -sfL --max-time 60 -A "$UA" -H 'Accept: application/json' -o "${{ matrix.name }}.json.new" "${{ matrix.url }}" || continue
+            python3 - "${{ matrix.name }}.json.new" <<'PY'
           import json, sys
           try:
-              d = json.load(open('${{ matrix.name }}.json.new'))
+              d = json.load(open(sys.argv[1]))
           except Exception as e:
               print(f'::warning::Upstream returned non-JSON: {e}')
               sys.exit(2)
@@ -56,25 +50,54 @@ jobs:
               sys.exit(2)
           print(f'OK: {len(d)} meetings')
           PY
-          rc=$?
-          if [ $rc -ne 0 ]; then
-            echo "skip=1" >> "$GITHUB_OUTPUT"
+            if [ $? -eq 0 ]; then ok=1; break; fi
+          done
+          if [ $ok -eq 1 ]; then
+            mv "${{ matrix.name }}.json.new" "${{ matrix.name }}.json"
+            echo "ok=1" >> "$GITHUB_OUTPUT"
+          else
             rm -f "${{ matrix.name }}.json.new"
-            exit 0
+            echo "::warning::Upstream fetch failed after 4 attempts; keeping previous ${{ matrix.name }}.json"
+            echo "ok=0" >> "$GITHUB_OUTPUT"
           fi
 
-          mv "${{ matrix.name }}.json.new" "${{ matrix.name }}.json"
+      - name: Record status
+        run: |
+          mkdir -p status
+          python3 - "${{ matrix.name }}" "${{ steps.fetch.outputs.ok }}" <<'PY'
+          import json, sys, os, datetime as dt
+          name, ok = sys.argv[1], sys.argv[2] == '1'
+          path = f'status/{name}.json'
+          now = dt.datetime.now(dt.timezone.utc).replace(microsecond=0)
+          try:
+              s = json.load(open(path))
+          except Exception:
+              s = {}
+          prev_ok = s.get('ok', True)
+          last_ok = s.get('last_ok')
+          write = False
+          if ok:
+              age = (now - dt.datetime.fromisoformat(last_ok)).total_seconds() if last_ok else 1e9
+              # a fresh success is recorded at most every 6 hours, or at once after a failure
+              if age >= 6 * 3600 or not prev_ok:
+                  s.update(ok=True, last_ok=now.isoformat(), error='')
+                  write = True
+          elif prev_ok:
+              s.update(ok=False, first_fail=now.isoformat(), error='Upstream fetch failed or returned non-JSON')
+              write = True
+          if write:
+              json.dump(s, open(path, 'w'), indent=2)
+              print('status updated', s)
+          PY
 
       - name: Commit if changed
-        if: steps.fetch.outputs.skip != '1'
         run: |
-          if [[ -n "$(git status --porcelain ${{ matrix.name }}.json)" ]]; then
+          if [[ -n "$(git status --porcelain ${{ matrix.name }}.json status/)" ]]; then
             git config user.name 'github-actions[bot]'
             git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git add "${{ matrix.name }}.json"
+            git add "${{ matrix.name }}.json" status/
             git commit -m "Refresh ${{ matrix.name }} feed"
-            git push
-            echo "Updated ${{ matrix.name }}.json"
+            for i in 1 2 3; do git pull --rebase -q && git push && break; sleep 5; done
           else
             echo "No changes to ${{ matrix.name }}.json"
           fi
