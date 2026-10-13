@@ -1,29 +1,24 @@
-# SNAPSHOT: AA Renfrew-Pontiac — District 70
+# SNAPSHOT: A.A. Renfrew-Pontiac - District 70
 # Source URL: https://aarenfrew.org/meetings-2/
-# Captured: 2026-05-18
-# Method: Search engine snippet extraction (direct fetch returned HTTP 403 from cloud IP)
-# Page last-modified per search index: 2026-01-03
-# Note: Day-of-week confirmed only for Wednesday (Steps & Traditions), Sunday (Kinburn),
-#       and Monday (Gold Bond — day confirmed via OAI/TSML mirror of this page).
-#       All other meetings have time/location confirmed but DAY IS UNKNOWN from available
-#       index snippets. Day-of-week must be verified on next successful direct fetch.
-# Meeting format codes: CD=Closed Discussion OS=Open Speaker OD=Open Discussion SG=Study Group W=Wheelchair
+# Captured: 2026-10-13 (headless Chromium)
+# One line per meeting: DAY | meeting [| NOTICE: ...]
 
-SUNDAY
-  Kinburn Big Book Group — 1st Sunday of month, 7:30 PM — [SG] — Kinburn Community Center, 3045 Kinburn Side Rd, Kinburn
-
-MONDAY
-  Gold Bond Group — 7:30 PM — [OS] — Catholic church, 78 Wellington St, Eganville ON
-
-WEDNESDAY (confirmed)
-  Steps & Traditions Group — 7:00 PM — [CD,W] — St. John Chrysostom Church, 295 Albert Street, Arnprior
-
-DAY UNKNOWN — time/location confirmed, day not captured in index
-  Steps and Traditions Study Group — 8:30 AM — [SG] — St. John Chrysostom Church, 295 Albert Street, Arnprior
-  Living Sober Group — 12:00 PM (Noon) — [OD] — First Baptist Church, 279 Alicia St, Arnprior
-  Shawville Group — 7:00 PM — [OS] — St. Paul Anglican Church (hall), 530 Main Street, Shawville QC
-  Keep it Simple Group — 7:30 PM — [OS] — Trinity St. Andrew's Church, 291 Plaunt St, Renfrew ON
-  Douglas Group — 8:00 PM — [OS] — Admaston Bromley Community Centre, 1766 Barr Line, Douglas ON
-
-DISTRICT MEETING (not a regular AA group meeting)
-  District 70 Committee Meeting — 2nd Thursday of month, 7:00 PM — Trinity St. Andrews Church, 291 Plaunt St, Renfrew ON OR via Zoom
+MONDAY | In person - Living Sober Group, Noon, OD, First Baptist Church, 279 Alicia St, Arnprior
+MONDAY | In person - Shawville Group, 7:00 PM, OD, OS on last Monday, St. Paul Anglican Church (hall), 530 Main Street Shawville.
+MONDAY | In person - Keep it simple Group, 7:30 PM, OS, Trinity St. Andrew's Church, 291 Plaunt St, Renfrew.
+MONDAY | In person - Gold Bond Group, 7:30 PM OS, Catholic church, 78 Wellington St, Eganville.
+TUESDAY | In person - White Lake Group, 7:30PM, CD, St. Andrew's Presbyterian Church, 3 Burnstown Road, White Lake.
+TUESDAY | In person - Beachburg New Freedom group, 7:30PM, OD, O/S on last Tuesday, Lions Hall, 9 Hannah St, Beachburg.
+WEDNESDAY | In person - As Bill Sees it Group, Noon, CD (OS on Last), First Baptist Church, 279 Alicia St, Arnprior.
+WEDNESDAY | In person - Lunch Bunch, Noon, OD, Trinity St. Andrews Church, 291 Plaunt St, Renfrew.
+WEDNESDAY | In person - Renfrew Group, 7:30PM, OD, Trinity St. Andrews Church, 291 Plaunt St, Renfrew.
+WEDNESDAY | In person - Steps & traditions Group, CD, W, 7:00 PM, St. John Chrysostom Church, 295 Albert Street Arnprior.
+THURSDAY | In person - Woman's 12&12, OD, Women Only, Bring your own book and journal. 7:00 PM, Trinity St. Andrews Church, 291 Plaunt St, Renfrew
+THURSDAY | In person - Turning Point Group, OS, 7:30 PM, First Baptist Church, 279 Alicia St, Arnprior.
+THURSDAY | In person - Way of life Group, OS, 8:00 PM, Grace United Church, 27 Main St, Cobden.
+FRIDAY | In person - Douglas Group, 8:00PM, OS, Admaston Bromley Community Centre, 1766 Barr Line, Douglas.
+SATURDAY | In person - Steps and Traditions Study Group, 8:30 AM, SG, St John Chrysostom Church 295 Albert Street, Arnprior.
+SATURDAY | In person - Saturday Night Group, 7 PM, OD, Grapevine meeting, St. John Chrysostom Church, 295 Albert Street Arnprior.
+SUNDAY | In person - Serenity Group, CD, OS on last Sunday, 7:30PM, Trinity StAndrews Church, 291 Plaunt St, Renfrew.
+SUNDAY | In person - Kinburn Big Book Group, CD, Steps or Traditions on First Sunday W, 7:30 PM, Kinburn Community Cntr, 3045 Kinburn Side Rd Kinburn.
+MONTHLY | District Meeting - Hybrid. Second Thursday of the Month, 7 PM, Trinity St. Andrews Church, 291 Plaunt St. Renfrew OR on Zoom https://us02web.zoom.us/j/83550335599, Meeting ID: 835 5033 5599 Landline: 613-209-3054, Call/Text - 613-633-3462 for password

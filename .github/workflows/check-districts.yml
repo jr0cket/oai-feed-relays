@@ -2,37 +2,43 @@ name: Check AA district meeting pages
 
 on:
   schedule:
-    - cron: '0 10 * * *'   # daily at 10:00 UTC (6 AM ET). Was twice a month; Jason 2026-10-13 wants district changes known by the next day
+    - cron: '0 10 * * *'   # daily at 10:00 UTC (6 AM ET). Jason 2026-10-13 wants district changes known by the next day
   workflow_dispatch:
     inputs:
       dry_run:
-        description: 'Dry run — check but do not update snapshots or open issue'
+        description: 'Dry run: read and compare, but do not update snapshots or open issues'
         type: boolean
         default: false
 
 permissions:
   contents: write   # push snapshot commits
-  issues: write     # open change-notification issues
+  issues: write     # open change and read-problem issues
 
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install pdftotext
-        run: sudo apt-get update -qq && sudo apt-get install -y poppler-utils
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
 
-      - name: Run snapshot check
+      - name: Install headless Chromium
+        run: |
+          pip install -q playwright
+          python -m playwright install --with-deps --only-shell chromium
+
+      - name: Read the district pages
         id: check
-        continue-on-error: true
         env:
           DRY_RUN: ${{ inputs.dry_run || 'false' }}
         run: |
           FLAGS=""
           [ "$DRY_RUN" = "true" ] && FLAGS="--dry-run"
-          python3 scripts/check_meetings.py $FLAGS
+          python scripts/check_meetings.py $FLAGS
 
       - name: Commit updated snapshots
         if: steps.check.outputs.has_changes == 'true' && inputs.dry_run != true
@@ -40,9 +46,8 @@ jobs:
           git config user.name  'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add snapshots/
-          # report.txt is transient — don't commit it
           if git diff --cached --quiet; then
-            echo "Nothing staged (dry-run guard hit?)"
+            echo "Nothing staged"
           else
             git commit -m "daily snapshot $(date +%Y-%m-%d): ${{ steps.check.outputs.changed_keys }}"
             for i in 1 2 3; do git pull --rebase -q && git push && break; sleep 5; done
@@ -53,29 +58,47 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          REPORT=$(cat report.txt 2>/dev/null || echo "(no report file)")
-          # Create label if it doesn't exist yet
-          gh label create "meeting-change" \
-            --color "0075ca" \
-            --description "AA meeting data changed — needs TSML sync" \
-            2>/dev/null || true
+          gh label create "meeting-change" --color "0075ca" --description "AA meeting data changed, needs TSML sync" 2>/dev/null || true
           {
-            echo "## AA District Meeting Changes"
+            echo "## A.A. district meeting changes"
             echo
             echo "The daily check of the district meeting pages (Cornwall D50, Renfrew D70, Madawaska D78) found changes to bring into the OAI meeting list."
             echo
             echo '```'
-            echo "$REPORT"
+            cat report.txt
             echo '```'
             echo
             echo "**Action:** update the affected meetings on ottawaaa.org, then close this issue."
           } > issue-body.md
-          gh issue create \
-            --title "Meeting changes detected: $(date +%Y-%m-%d)" \
-            --label "meeting-change" \
-            --body-file issue-body.md
+          gh issue create --title "Meeting changes detected: $(date +%Y-%m-%d)" --label "meeting-change" --body-file issue-body.md
 
-      - name: Warn on fetch errors
-        if: steps.check.outputs.has_errors == 'true'
+      - name: Open or update issue for read problems
+        if: steps.check.outputs.has_errors == 'true' && inputs.dry_run != true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "::warning::One or more districts had fetch errors — see job summary for details."
+          gh label create "district-read-problem" --color "d93f0b" --description "A district meeting page could not be read" 2>/dev/null || true
+          {
+            echo "The daily check could not read one or more district meeting pages, so changes there are not being caught. Nothing was marked as removed."
+            echo
+            echo '```'
+            cat report.txt
+            echo '```'
+            echo
+            echo "This issue closes itself once every page reads again."
+          } > error-body.md
+          OPEN=$(gh issue list --label district-read-problem --state open --json number --jq '.[0].number')
+          if [ -n "$OPEN" ]; then
+            gh issue comment "$OPEN" --body-file error-body.md
+          else
+            gh issue create --title "District page read problem: $(date +%Y-%m-%d)" --label "district-read-problem" --body-file error-body.md
+          fi
+
+      - name: Close read-problem issue once pages read again
+        if: steps.check.outputs.has_errors == 'false' && inputs.dry_run != true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for n in $(gh issue list --label district-read-problem --state open --json number --jq '.[].number'); do
+            gh issue close "$n" --comment "All three district pages read normally on $(date +%Y-%m-%d)."
+          done
