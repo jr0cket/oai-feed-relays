@@ -1,5 +1,6 @@
 {
-  "ok": false,
-  "first_fail": "2026-10-13T16:37:53+00:00",
-  "error": "Upstream fetch failed or returned non-JSON"
+  "ok": true,
+  "error": "",
+  "last_ok": "2026-10-13T20:09:48+00:00",
+  "via": "home"
 }
