@@ -1,5 +1,7 @@
 name: Check AA District Sites
 
+# DISABLED 2026-10-13: duplicate of check-districts.yml (same three sites), which is the
+# one kept and now runs daily. Kept valid so it can be re-enabled.
 # Monitors cornwall (D50), renfrew (D70), and madawaska (no TSML feed).
 # Fetches each site, diffs against snapshots/, commits changes, and
 # optionally notifies OAI WordPress when a substantive change is found.
@@ -53,9 +55,6 @@ jobs:
       # -----------------------------------------------------------------------
       - name: Notify OAI WordPress
         if: steps.check.outputs.has_changes == 'true'
-        env:
-          WP_USERNAME:    ${{ secrets.WP_USERNAME }}
-          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
         run: |
           TODAY="$(date -u +%Y-%m-%d)"
           SLUGS="${{ steps.check.outputs.changed_slugs }}"

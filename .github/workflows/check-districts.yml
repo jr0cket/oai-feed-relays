@@ -2,7 +2,7 @@ name: Check AA district meeting pages
 
 on:
   schedule:
-    - cron: '0 10 1,15 * *'   # 1st and 15th of each month at 10:00 UTC (6 AM ET)
+    - cron: '0 10 * * *'   # daily at 10:00 UTC (6 AM ET). Was twice a month; Jason 2026-10-13 wants district changes known by the next day
   workflow_dispatch:
     inputs:
       dry_run:
@@ -44,8 +44,8 @@ jobs:
           if git diff --cached --quiet; then
             echo "Nothing staged (dry-run guard hit?)"
           else
-            git commit -m "biweekly snapshot $(date +%Y-%m-%d): ${{ steps.check.outputs.changed_keys }}"
-            git push
+            git commit -m "daily snapshot $(date +%Y-%m-%d): ${{ steps.check.outputs.changed_keys }}"
+            for i in 1 2 3; do git pull --rebase -q && git push && break; sleep 5; done
           fi
 
       - name: Open issue for meeting changes
@@ -59,18 +59,21 @@ jobs:
             --color "0075ca" \
             --description "AA meeting data changed — needs TSML sync" \
             2>/dev/null || true
+          {
+            echo "## AA District Meeting Changes"
+            echo
+            echo "The daily check of the district meeting pages (Cornwall D50, Renfrew D70, Madawaska D78) found changes to bring into the OAI meeting list."
+            echo
+            echo '```'
+            echo "$REPORT"
+            echo '```'
+            echo
+            echo "**Action:** update the affected meetings on ottawaaa.org, then close this issue."
+          } > issue-body.md
           gh issue create \
-            --title "Meeting changes detected — $(date +%Y-%m-%d)" \
+            --title "Meeting changes detected: $(date +%Y-%m-%d)" \
             --label "meeting-change" \
-            --body "## AA District Meeting Changes
-
-The biweekly snapshot check found changes that need to be synced into the OAI WordPress TSML plugin.
-
-\`\`\`
-${REPORT}
-\`\`\`
-
-**Action:** update the affected meetings in the [OAI TSML plugin](https://ottawaaa.org/wp-admin/), then close this issue."
+            --body-file issue-body.md
 
       - name: Warn on fetch errors
         if: steps.check.outputs.has_errors == 'true'
