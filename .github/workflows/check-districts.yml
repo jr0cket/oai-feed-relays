@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install pdftotext
-        run: sudo apt-get install -y poppler-utils
+        run: sudo apt-get update -qq && sudo apt-get install -y poppler-utils
 
       - name: Run snapshot check
         id: check
