@@ -171,7 +171,7 @@ def read_cornwall(page: dict) -> list[str]:
         if c is not None:
             by_col[c].append(n)
 
-    meetings = []   # dicts: day, col, y0, y1, parts, notices
+    meetings = []   # dicts: day, col, y0, parts, notices
     for c, items in by_col.items():
         # merge nodes on the same row
         rows: list[list] = []
@@ -185,31 +185,27 @@ def read_cornwall(page: dict) -> list[str]:
             line = norm(" ".join(parts))
             if line.upper().rstrip(":") in DAYS:
                 day = line.upper().rstrip(":")
-                if meetings and meetings[-1]["col"] == c:
-                    meetings[-1]["y1"] = y
                 continue
             if day is None:
                 continue            # legend, prayer box, etc. above the first day
             if TIME_RE.search(line) or re.search(r"\(\d{1,2}(:\d\d)?\s*[ap]m\)", line, re.I):
-                if meetings and meetings[-1]["col"] == c and meetings[-1]["y1"] is None:
-                    meetings[-1]["y1"] = y
-                meetings.append({"day": day, "col": c, "y0": y, "y1": None,
+                meetings.append({"day": day, "col": c, "y0": y,
                                  "parts": [line], "notices": []})
             elif meetings and meetings[-1]["col"] == c and meetings[-1]["day"] == day:
                 if len(meetings[-1]["parts"]) < 6:
                     meetings[-1]["parts"].append(line)
 
-    for m in meetings:
-        if m["y1"] is None:
-            m["y1"] = m["y0"] + 130
+    loose = []
     for n in notices:
         c = column(n["x"])
-        if c is None:
-            continue
-        for m in meetings:
-            if m["col"] == c and m["y0"] - 10 <= n["y"] < m["y1"]:
-                m["notices"].append(norm(n["t"]))
-                break
+        # A label sitting on a meeting's title line belongs to that meeting
+        # (30 px allows for Mac/Linux font differences). Wix moves other
+        # labels around with the window width, so they stay page-level.
+        near = [m for m in meetings if m["col"] == c and abs(m["y0"] - n["y"]) <= 30]
+        if c is not None and near:
+            min(near, key=lambda m: abs(m["y0"] - n["y"]))["notices"].append(norm(n["t"]))
+        else:
+            loose.append(norm(n["t"]))
 
     out = []
     for m in meetings:
@@ -217,6 +213,7 @@ def read_cornwall(page: dict) -> list[str]:
         if m["notices"]:
             line += " | NOTICE: " + "; ".join(sorted(m["notices"]))
         out.append(line)
+    out += [f"PAGE NOTICE | {t}" for t in sorted(loose)]
     return out
 
 
@@ -321,7 +318,7 @@ def main() -> int:
             new = d["reader"](page)
             floor = max(d["min"], int(len(old) * 0.6))
             if len(new) < floor:
-                raise ReadProblem(f"read only {len(new)} meetings (expected at least {floor}); "
+                raise ReadProblem(f"read only {len(new)} lines (expected at least {floor}); "
                                   "the page may be down or its layout changed")
         except ReadProblem as e:
             report.append(f"{d['label']}: READ PROBLEM - {e}. Nothing compared; snapshot kept. {d['url']}")
@@ -333,13 +330,14 @@ def main() -> int:
             continue
 
         diffs = make_diff(old, new) if old else []
+        count = sum(1 for l in new if not l.startswith(("PAGE NOTICE", "PRINT LIST")))
         if not old:
-            report.append(f"{d['label']}: first snapshot, {len(new)} meetings")
+            report.append(f"{d['label']}: first snapshot, {count} meetings")
         elif not diffs:
-            report.append(f"{d['label']}: no changes ({len(new)} meetings)")
+            report.append(f"{d['label']}: no changes ({count} meetings)")
         else:
             n = sum(1 for l in diffs if not l.lstrip().startswith("NOW:"))
-            report.append(f"{d['label']}: {n} change{'s' if n != 1 else ''} ({len(new)} meetings now) {d['url']}")
+            report.append(f"{d['label']}: {n} change{'s' if n != 1 else ''} ({count} meetings now) {d['url']}")
             report += [f"  {l}" for l in diffs]
         if diffs or not old:
             changed.append(d["key"])
