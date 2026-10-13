@@ -1,0 +1,5 @@
+{
+  "ok": false,
+  "first_fail": "2026-10-13T16:37:53+00:00",
+  "error": "Upstream fetch failed or returned non-JSON"
+}
